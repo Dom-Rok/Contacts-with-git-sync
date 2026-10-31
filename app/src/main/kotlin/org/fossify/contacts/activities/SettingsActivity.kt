@@ -13,6 +13,7 @@ import org.fossify.commons.models.RadioItem
 import org.fossify.contacts.R
 import org.fossify.contacts.databinding.ActivitySettingsBinding
 import org.fossify.contacts.dialogs.ExportContactsDialog
+import org.fossify.contacts.dialogs.GithubBackupDialog
 import org.fossify.contacts.dialogs.ManageAutoBackupsDialog
 import org.fossify.contacts.dialogs.ManageVisibleFieldsDialog
 import org.fossify.contacts.dialogs.ManageVisibleTabsDialog
@@ -62,6 +63,8 @@ class SettingsActivity : SimpleActivity() {
         setupDefaultTab()
         setupEnableAutomaticBackups()
         setupManageAutomaticBackups()
+        setupBackupOnChange()
+        setupGithubBackup()
         setupExportContacts()
         setupImportContacts()
         updateTextColors(binding.settingsHolder)
@@ -286,10 +289,34 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    private fun setupGithubBackup() {
+        binding.settingsGithubBackupHolder.beVisibleIf(isRPlus() && config.autoBackup)
+        binding.settingsGithubBackupHolder.setOnClickListener {
+            GithubBackupDialog(this) {}
+        }
+    }
+
+    private fun setupBackupOnChange() {
+        binding.settingsBackupOnChangeHolder.beVisibleIf(isRPlus() && config.autoBackup)
+        binding.settingsBackupOnChange.isChecked = config.autoBackupOnChange
+        binding.settingsBackupOnChangeHolder.setOnClickListener {
+            binding.settingsBackupOnChange.toggle()
+            config.autoBackupOnChange = binding.settingsBackupOnChange.isChecked
+            if (!config.autoBackupOnChange) {
+                cancelBackupOnContactChange()
+            }
+        }
+    }
+
     private fun enableOrDisableAutomaticBackups(enable: Boolean) {
         config.autoBackup = enable
         binding.settingsEnableAutomaticBackups.isChecked = enable
         binding.settingsManageAutomaticBackupsHolder.beVisibleIf(enable)
+        binding.settingsBackupOnChangeHolder.beVisibleIf(enable)
+        binding.settingsGithubBackupHolder.beVisibleIf(enable)
+        if (!enable) {
+            cancelBackupOnContactChange()
+        }
     }
 
     private fun setupExportContacts() {

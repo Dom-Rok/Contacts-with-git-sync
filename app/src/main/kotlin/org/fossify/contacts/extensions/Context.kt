@@ -3,6 +3,9 @@ package org.fossify.contacts.extensions
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
@@ -15,14 +18,22 @@ import org.fossify.commons.models.contacts.Contact
 import org.fossify.contacts.BuildConfig
 import org.fossify.contacts.R
 import org.fossify.contacts.helpers.AUTOMATIC_BACKUP_REQUEST_CODE
+import org.fossify.contacts.helpers.BACKUP_ON_CHANGE_DELAY_MS
+import org.fossify.contacts.helpers.BACKUP_ON_CHANGE_FILE_NAME
+import org.fossify.contacts.helpers.BACKUP_ON_CHANGE_JOB_ID
+import org.fossify.contacts.helpers.GithubBackup
+import org.fossify.contacts.helpers.TeeOutputStream
 import org.fossify.contacts.helpers.Config
 import org.fossify.contacts.helpers.VcfExporter
 import org.fossify.contacts.helpers.getNextAutoBackupTime
 import org.fossify.contacts.helpers.getPreviousAutoBackupTime
 import org.fossify.contacts.receivers.AutomaticBackupReceiver
+import org.fossify.contacts.services.ContactChangeBackupService
 import org.joda.time.DateTime
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStream
 
 val Context.config: Config get() = Config.newInstance(applicationContext)
 fun Context.getCachePhotoUri(file: File = getCachePhoto()) = FileProvider.getUriForFile(this, "${BuildConfig.APPLICATION_ID}.provider", file)
@@ -75,34 +86,71 @@ fun Context.checkAndBackupContactsOnBoot() {
     }
 }
 
-fun Context.backupContacts() {
+/**
+ * Schedules a debounced backup after the user added, edited or deleted a contact.
+ * Calling it again before the job runs replaces the pending job, so a burst of changes produces one backup.
+ * Does nothing unless automatic backups and "back up on change" are both enabled.
+ */
+fun Context.scheduleBackupOnContactChange() {
+    if (!isRPlus() || !config.autoBackup || !config.autoBackupOnChange) {
+        return
+    }
+
+    try {
+        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        val jobInfo = JobInfo.Builder(BACKUP_ON_CHANGE_JOB_ID, ComponentName(this, ContactChangeBackupService::class.java))
+            .setMinimumLatency(BACKUP_ON_CHANGE_DELAY_MS)
+            .build()
+        jobScheduler.schedule(jobInfo)
+    } catch (e: Exception) {
+        showErrorToast(e)
+    }
+}
+
+fun Context.cancelBackupOnContactChange() {
+    val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+    jobScheduler.cancel(BACKUP_ON_CHANGE_JOB_ID)
+}
+
+/**
+ * @param changeTriggered true when called because a contact changed. Such a backup always overwrites one stable file
+ * ([BACKUP_ON_CHANGE_FILE_NAME]) instead of creating a new timestamped file, and leaves the daily schedule untouched.
+ * @param onFinished called once on every exit path, after the work is done.
+ */
+fun Context.backupContacts(changeTriggered: Boolean = false, onFinished: () -> Unit = {}) {
     require(isRPlus())
     ensureBackgroundThread {
         val config = config
         ContactsHelper(this).getContactsToExport(selectedContactSources = config.autoBackupContactSources) { contactsToBackup ->
             if (contactsToBackup.isEmpty()) {
-                toast(org.fossify.commons.R.string.no_entries_for_exporting)
-                config.lastAutoBackupTime = DateTime.now().millis
-                scheduleNextAutomaticBackup()
+                if (!changeTriggered) {
+                    toast(org.fossify.commons.R.string.no_entries_for_exporting)
+                    config.lastAutoBackupTime = DateTime.now().millis
+                    scheduleNextAutomaticBackup()
+                }
+                onFinished()
                 return@getContactsToExport
             }
 
+            val filename = if (changeTriggered) {
+                BACKUP_ON_CHANGE_FILE_NAME
+            } else {
+                val now = DateTime.now()
+                val year = now.year.toString()
+                val month = now.monthOfYear.ensureTwoDigits()
+                val day = now.dayOfMonth.ensureTwoDigits()
+                val hours = now.hourOfDay.ensureTwoDigits()
+                val minutes = now.minuteOfHour.ensureTwoDigits()
+                val seconds = now.secondOfMinute.ensureTwoDigits()
 
-            val now = DateTime.now()
-            val year = now.year.toString()
-            val month = now.monthOfYear.ensureTwoDigits()
-            val day = now.dayOfMonth.ensureTwoDigits()
-            val hours = now.hourOfDay.ensureTwoDigits()
-            val minutes = now.minuteOfHour.ensureTwoDigits()
-            val seconds = now.secondOfMinute.ensureTwoDigits()
-
-            val filename = config.autoBackupFilename
-                .replace("%Y", year, false)
-                .replace("%M", month, false)
-                .replace("%D", day, false)
-                .replace("%h", hours, false)
-                .replace("%m", minutes, false)
-                .replace("%s", seconds, false)
+                config.autoBackupFilename
+                    .replace("%Y", year, false)
+                    .replace("%M", month, false)
+                    .replace("%D", day, false)
+                    .replace("%h", hours, false)
+                    .replace("%m", minutes, false)
+                    .replace("%s", seconds, false)
+            }
 
             val outputFolder = File(config.autoBackupFolder).apply {
                 mkdirs()
@@ -128,24 +176,60 @@ fun Context.backupContacts() {
                 }
             } catch (e: Exception) {
                 showErrorToast(e)
-                scheduleNextAutomaticBackup()
+                if (!changeTriggered) {
+                    scheduleNextAutomaticBackup()
+                }
+                onFinished()
                 return@getContactsToExport
             }
 
+            // when GitHub is enabled, keep a copy of the exported bytes so they can be uploaded after the local write
+            val githubCopy = if (config.githubBackupEnabled) ByteArrayOutputStream() else null
+            val exportStream: OutputStream = if (githubCopy != null) TeeOutputStream(outputStream, githubCopy) else outputStream
+            var exportSucceeded = true
+
             VcfExporter().exportContacts(
                 context = this,
-                outputStream = outputStream,
+                outputStream = exportStream,
                 contacts = contactsToBackup.toMutableList() as ArrayList<Contact>,
                 showExportingToast = false
             ) { exportResult ->
                 if (exportResult == VcfExporter.ExportResult.EXPORT_FAIL) {
+                    exportSucceeded = false
                     toast(org.fossify.commons.R.string.exporting_failed)
                 }
             }
 
-            config.lastAutoBackupTime = DateTime.now().millis
-            scheduleNextAutomaticBackup()
+            if (githubCopy != null && exportSucceeded) {
+                uploadBackupToGithub(config, githubCopy.toByteArray())
+            }
+
+            if (!changeTriggered) {
+                config.lastAutoBackupTime = DateTime.now().millis
+                scheduleNextAutomaticBackup()
+            }
+            onFinished()
         }
+    }
+}
+
+private fun Context.uploadBackupToGithub(config: Config, content: ByteArray) {
+    val target = GithubBackup.Target(
+        repo = config.githubRepo,
+        branch = config.githubBranch,
+        folder = config.githubFolder,
+        token = config.githubToken,
+    )
+
+    if (target.repo.isEmpty() || target.branch.isEmpty() || target.token.isEmpty()) {
+        toast(getString(R.string.github_not_configured))
+        return
+    }
+
+    try {
+        GithubBackup.upload(target, content, "Contacts backup ${DateTime.now()}")
+    } catch (e: Exception) {
+        toast(getString(R.string.github_upload_failed, e.message.orEmpty()), android.widget.Toast.LENGTH_LONG)
     }
 }
 

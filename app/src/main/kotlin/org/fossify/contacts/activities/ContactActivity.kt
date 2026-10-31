@@ -43,6 +43,7 @@ import org.fossify.commons.helpers.letterBackgroundColors
 import org.fossify.commons.models.RadioItem
 import org.fossify.commons.models.contacts.Contact
 import org.fossify.contacts.R
+import org.fossify.contacts.extensions.scheduleBackupOnContactChange
 import org.fossify.contacts.extensions.shareContacts
 
 abstract class ContactActivity : SimpleActivity() {
@@ -133,6 +134,7 @@ abstract class ContactActivity : SimpleActivity() {
         ConfirmationDialog(this) {
             if (contact != null) {
                 ContactsHelper(this).deleteContact(contact!!, false) {
+                    scheduleBackupOnContactChange()
                     finish()
                 }
             }

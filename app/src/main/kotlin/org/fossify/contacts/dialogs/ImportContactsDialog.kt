@@ -12,6 +12,7 @@ import org.fossify.contacts.R
 import org.fossify.contacts.activities.SimpleActivity
 import org.fossify.contacts.databinding.DialogImportContactsBinding
 import org.fossify.contacts.extensions.config
+import org.fossify.contacts.extensions.scheduleBackupOnContactChange
 import org.fossify.contacts.extensions.showContactSourcePicker
 import org.fossify.contacts.helpers.VcfImporter
 import org.fossify.contacts.helpers.VcfImporter.ImportResult.IMPORT_FAIL
@@ -79,6 +80,9 @@ class ImportContactsDialog(val activity: SimpleActivity, val path: String, priva
                 else -> org.fossify.commons.R.string.importing_failed
             }
         )
+        if (result != IMPORT_FAIL) {
+            activity.scheduleBackupOnContactChange()
+        }
         callback(result != IMPORT_FAIL)
     }
 }

@@ -17,6 +17,20 @@ const val AUTOMATIC_BACKUP_REQUEST_CODE = 10001
 const val AUTO_BACKUP_INTERVAL_IN_DAYS = 1
 
 const val AUTO_BACKUP_CONTACT_SOURCES = "auto_backup_contact_sources"
+const val AUTO_BACKUP_ON_CHANGE = "auto_backup_on_change"
+
+// backups triggered by adding, editing or deleting a contact
+const val BACKUP_ON_CHANGE_JOB_ID = 10002
+const val BACKUP_ON_CHANGE_DELAY_MS = 10_000L
+const val BACKUP_ON_CHANGE_FILE_NAME = "contacts_latest"
+
+// GitHub backup destination
+const val GITHUB_BACKUP_ENABLED = "github_backup_enabled"
+const val GITHUB_BACKUP_REPO = "github_backup_repo"
+const val GITHUB_BACKUP_BRANCH = "github_backup_branch"
+const val GITHUB_BACKUP_FOLDER = "github_backup_folder"
+const val GITHUB_BACKUP_TOKEN = "github_backup_token"
+const val GITHUB_BACKUP_FILE_NAME = "contacts.vcf"
 
 // extras used at third party intents
 const val KEY_NAME = "name"

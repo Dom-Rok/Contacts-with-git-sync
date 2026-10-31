@@ -124,6 +124,7 @@ import org.fossify.contacts.dialogs.MyDatePickerDialog
 import org.fossify.contacts.dialogs.SelectGroupsDialog
 import org.fossify.contacts.extensions.config
 import org.fossify.contacts.extensions.getCachePhotoUri
+import org.fossify.contacts.extensions.scheduleBackupOnContactChange
 import org.fossify.contacts.extensions.showContactSourcePicker
 import org.fossify.contacts.helpers.ADD_NEW_CONTACT_NUMBER
 import org.fossify.contacts.helpers.IS_FROM_SIMPLE_CONTACTS
@@ -1385,6 +1386,7 @@ class EditContactActivity : ContactActivity() {
         }
 
         if (ContactsHelper(this@EditContactActivity).insertContact(contact!!)) {
+            scheduleBackupOnContactChange()
             if (deleteCurrentContact) {
                 contact!!.source = originalContactSource
                 ContactsHelper(this).deleteContact(contact!!, false) {
@@ -1405,6 +1407,7 @@ class EditContactActivity : ContactActivity() {
     private fun updateContact(photoUpdateStatus: Int, primaryState: Pair<PhoneNumber?, PhoneNumber?>) {
         isSaving = true
         if (ContactsHelper(this@EditContactActivity).updateContact(contact!!, photoUpdateStatus)) {
+            scheduleBackupOnContactChange()
             val status = getPrimaryNumberStatus(primaryState.first, primaryState.second)
             if (status != PrimaryNumberStatus.UNCHANGED) {
                 updateDefaultNumberForDuplicateContacts(primaryState, status) {

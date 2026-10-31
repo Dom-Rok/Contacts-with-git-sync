@@ -42,6 +42,7 @@ import org.fossify.contacts.activities.ViewContactActivity
 import org.fossify.contacts.dialogs.CreateNewGroupDialog
 import org.fossify.contacts.extensions.config
 import org.fossify.contacts.extensions.editContact
+import org.fossify.contacts.extensions.scheduleBackupOnContactChange
 import org.fossify.contacts.extensions.shareContacts
 import org.fossify.contacts.helpers.*
 import org.fossify.contacts.interfaces.RefreshContactsListener
@@ -230,6 +231,7 @@ class ContactsAdapter(
                     } }
                     .toMutableList() as ArrayList<Contact>)
 
+                activity.scheduleBackupOnContactChange()
                 activity.runOnUiThread {
                     if (contactItems.isEmpty()) {
                         refreshListener?.refreshContacts(ALL_TABS_MASK)

@@ -842,6 +842,7 @@ class ViewContactActivity : ContactActivity() {
         ConfirmationDialog(this, message) {
             if (contact != null) {
                 ContactsHelper(this).deleteContact(contact!!, mergeDuplicate) {
+                    scheduleBackupOnContactChange()
                     finish()
                 }
             }

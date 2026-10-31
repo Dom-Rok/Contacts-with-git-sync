@@ -410,6 +410,36 @@
 
             </RelativeLayout>
 
+            <RelativeLayout
+                android:id="@+id/settings_github_backup_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_github_backup"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/github_backup" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_backup_on_change_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_backup_on_change"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/backup_on_contact_change" />
+
+            </RelativeLayout>
+
             <include
                 android:id="@+id/settings_backups_divider"
                 layout="@layout/divider" />

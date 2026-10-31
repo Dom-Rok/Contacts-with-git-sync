@@ -110,4 +110,19 @@
         Haven't found some strings? There's more at
         https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res
     -->
+    <string name="backup_on_contact_change">Also back up when a contact is added, edited or deleted</string>
+    <string name="github_backup">GitHub backup</string>
+    <string name="github_upload_backups">Upload backups to GitHub</string>
+    <string name="github_repository">Repository (owner/name)</string>
+    <string name="github_branch">Branch</string>
+    <string name="github_folder">Folder in repository (optional)</string>
+    <string name="github_token">Personal access token</string>
+    <string name="github_token_saved">Personal access token (leave empty to keep the saved one)</string>
+    <string name="github_token_help">Create a token with write access to the repository contents. It is stored encrypted on this device. Backups are uploaded as contacts.vcf; the repository history keeps the older versions.</string>
+    <string name="github_invalid_repository">Enter the repository as owner/name</string>
+    <string name="github_missing_fields">Branch and token are required</string>
+    <string name="github_connection_ok">Connected to GitHub</string>
+    <string name="github_connection_failed">GitHub connection failed: %1$s</string>
+    <string name="github_upload_failed">GitHub upload failed: %1$s</string>
+    <string name="github_not_configured">GitHub backup is enabled but not fully configured</string>
 </resources>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/github_backup_scrollview"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:id="@+id/github_backup_holder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/activity_margin"
+        android:paddingTop="@dimen/activity_margin"
+        android:paddingEnd="@dimen/activity_margin">
+
+        <org.fossify.commons.views.MyMaterialSwitch
+            android:id="@+id/github_backup_enabled"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/activity_margin"
+            android:text="@string/github_upload_backups" />
+
+        <org.fossify.commons.views.MyTextInputLayout
+            android:id="@+id/github_repo_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/activity_margin"
+            android:hint="@string/github_repository">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/github_repo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textUri"
+                android:singleLine="true"
+                android:textCursorDrawable="@null"
+                android:textSize="@dimen/bigger_text_size" />
+
+        </org.fossify.commons.views.MyTextInputLayout>
+
+        <org.fossify.commons.views.MyTextInputLayout
+            android:id="@+id/github_branch_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/activity_margin"
+            android:hint="@string/github_branch">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/github_branch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textUri"
+                android:singleLine="true"
+                android:textCursorDrawable="@null"
+                android:textSize="@dimen/bigger_text_size" />
+
+        </org.fossify.commons.views.MyTextInputLayout>
+
+        <org.fossify.commons.views.MyTextInputLayout
+            android:id="@+id/github_folder_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/activity_margin"
+            android:hint="@string/github_folder">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/github_folder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textUri"
+                android:singleLine="true"
+                android:textCursorDrawable="@null"
+                android:textSize="@dimen/bigger_text_size" />
+
+        </org.fossify.commons.views.MyTextInputLayout>
+
+        <org.fossify.commons.views.MyTextInputLayout
+            android:id="@+id/github_token_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/medium_margin"
+            android:hint="@string/github_token">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/github_token"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:singleLine="true"
+                android:textCursorDrawable="@null"
+                android:textSize="@dimen/bigger_text_size" />
+
+        </org.fossify.commons.views.MyTextInputLayout>
+
+        <org.fossify.commons.views.MyTextView
+            android:id="@+id/github_token_help"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/activity_margin"
+            android:text="@string/github_token_help"
+            android:textSize="@dimen/smaller_text_size" />
+
+    </LinearLayout>
+</ScrollView>
